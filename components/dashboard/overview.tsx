@@ -10,7 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "@/components/ui/chart"
-import { getDashboardStats } from "@/lib/data"
+import { getDashboardStats, getActivities, getRecentInvoices, getPayments } from "@/lib/data"
 import { useEffect, useState } from "react"
 
 type ChartData = {
@@ -26,8 +26,43 @@ export function Overview() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const stats = await getDashboardStats()
-        setData(stats.revenueByMonth)
+        // Fetch real data from multiple sources
+        const [stats, activities, invoices, payments] = await Promise.all([
+          getDashboardStats(),
+          getActivities(),
+          getRecentInvoices(100),
+          getPayments(),
+        ])
+
+        // Process the data to create a more accurate chart
+        // In a real app, this would be calculated from actual invoice and payment data
+        const revenueByMonth = stats.revenueByMonth.map((month) => {
+          // Find payments in this month to get actual revenue
+          const monthName = month.name
+          const paymentTotal = payments
+            .filter(
+              (p) =>
+                p.status === "completed" && new Date(p.date).toLocaleString("en-US", { month: "short" }) === monthName,
+            )
+            .reduce((sum, p) => sum + p.amount, 0)
+
+          // Find pending invoices for this month
+          const pendingTotal = invoices
+            .filter(
+              (inv) =>
+                inv.status === "pending" &&
+                new Date(inv.date).toLocaleString("en-US", { month: "short" }) === monthName,
+            )
+            .reduce((sum, inv) => sum + inv.total, 0)
+
+          return {
+            name: monthName,
+            revenue: paymentTotal > 0 ? paymentTotal : month.revenue, // Use actual payment data if available
+            pending: pendingTotal > 0 ? pendingTotal : month.pending, // Use actual pending data if available
+          }
+        })
+
+        setData(revenueByMonth)
       } catch (error) {
         console.error("Failed to fetch chart data:", error)
       } finally {

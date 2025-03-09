@@ -16,6 +16,7 @@ import {
   Users,
   FileSpreadsheet,
   Wallet,
+  Palette,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -85,6 +86,7 @@ export function Sidebar() {
         <NavItem path="/analytics" icon={BarChart} title="Analytics" expanded={expanded} />
         <NavItem path="/payments" icon={Wallet} title="Payments" expanded={expanded} />
         <NavItem path="/activities" icon={FileSpreadsheet} title="Activities" expanded={expanded} />
+        <NavItem path="/invoice-designer/templates" icon={Palette} title="Invoice Designer" expanded={expanded} />
       </div>
 
       <div className="absolute bottom-4 w-full px-2">
